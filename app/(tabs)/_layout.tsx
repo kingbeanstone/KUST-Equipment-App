@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tabs } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-// --- 인터페이스 정의 ---
+// 1. 데이터 모델 인터페이스 정의
 export interface GearStatus {
-  value: string;   // 장비 규격/정보
-  checked: boolean; // 체크 여부
+  value: string;
+  checked: boolean;
 }
 
 export interface MemberEquipment {
@@ -16,58 +16,73 @@ export interface MemberEquipment {
   후드: GearStatus; 조끼: GearStatus;
 }
 
+// 2. Context 타입 정의
 interface EquipmentContextType {
   data: MemberEquipment[];
   setData: React.Dispatch<React.SetStateAction<MemberEquipment[]>>;
 }
 
 const EquipmentContext = createContext<EquipmentContextType | null>(null);
+
 export const useEquipment = () => {
   const context = useContext(EquipmentContext);
   if (!context) throw new Error("useEquipment must be used within a Provider");
   return context;
 };
 
-const STORAGE_KEY = '@kust_equipment_v1';
+const STORAGE_KEY = '@kust_equipment_data_2026';
 
 export default function TabLayout() {
   const [data, setData] = useState<MemberEquipment[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 데이터 로드 (Lifecycle: Mount)
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-        if (jsonValue !== null) {
-          setData(JSON.parse(jsonValue));
-        }
-      } catch (e) {
-        console.error('Load Error:', e);
-      } finally {
-        setIsLoaded(true);
+  // 3. 비동기 데이터 로드 (Life Cycle: Mount)
+  const loadData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      if (jsonValue !== null) {
+        setData(JSON.parse(jsonValue));
       }
-    };
+    } catch (e) {
+      console.error('Failed to load storage', e);
+    } finally {
+      setIsLoaded(true); // 로딩 시도가 끝나야 저장을 허용함 (데이터 덮어쓰기 방지)
+    }
+  };
+
+  // 4. 비동기 데이터 저장 (Life Cycle: Update)
+  const saveData = async (newData: MemberEquipment[]) => {
+    try {
+      const jsonValue = JSON.stringify(newData);
+      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+    } catch (e) {
+      console.error('Failed to save storage', e);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
-  // 데이터 저장 (Lifecycle: Update)
   useEffect(() => {
     if (isLoaded) {
-      const saveData = async () => {
-        try {
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch (e) {
-          console.error('Save Error:', e);
-        }
-      };
-      saveData();
+      saveData(data);
     }
   }, [data, isLoaded]);
 
   return (
     <EquipmentContext.Provider value={{ data, setData }}>
-      <Tabs screenOptions={{ tabBarActiveTintColor: '#007AFF' }}>
+      <Tabs screenOptions={{ 
+        tabBarActiveTintColor: '#007AFF',
+        tabBarIcon: () => null, 
+        tabBarIconStyle: { display: 'none' },
+        tabBarLabelStyle: {
+            fontSize: 15,
+            fontWeight: 'bold',
+            bottom: -10, // 아이콘이 없으므로 텍스트 위치를 살짝 위로 조정
+          },
+        }}>
+        
         <Tabs.Screen name="index" options={{ title: '정보 입력', headerShown: false }} />
         <Tabs.Screen name="checklist" options={{ title: '체크리스트', headerShown: false }} />
       </Tabs>
