@@ -1,5 +1,15 @@
 import React from 'react';
-import { FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert // 팝업창을 위해 추가
+  ,
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { MemberEquipment, useEquipment } from './_layout';
 
 export default function ChecklistScreen() {
@@ -14,6 +24,32 @@ export default function ChecklistScreen() {
       }
       return item;
     }));
+  };
+
+  // --- [추가] 전체 리셋 함수 ---
+  const handleReset = () => {
+    Alert.alert(
+      "리셋 확인",
+      "정말 리셋하시겠습니까?\n모든 체크 상태가 X로 바뀝니다.",
+      [
+        { text: "취소", style: "cancel" },
+        { 
+          text: "확인", 
+          style: "destructive", // 안드로이드/iOS에서 경고 의미의 빨간색 텍스트 적용
+          onPress: () => {
+            const resetData = data.map((member) => {
+              const updatedMember = { ...member };
+              // 모든 장비 키를 순회하며 checked를 false로 변경
+              gearKeys.forEach((key) => {
+                updatedMember[key] = { ...updatedMember[key], checked: false };
+              });
+              return updatedMember;
+            });
+            setData(resetData);
+          } 
+        },
+      ]
+    );
   };
 
   const renderItem = ({ item }: { item: MemberEquipment }) => (
@@ -52,7 +88,14 @@ export default function ChecklistScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}><Text style={styles.headerTitle}>✅ 장비 체크 현황 (2줄 1세트)</Text></View>
+      {/* 헤더 부분에 리셋 버튼 추가 */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>✅ 장비 체크 현황</Text>
+        <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+          <Text style={styles.resetButtonText}>초기화</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView horizontal>
         <View>
           <View style={[styles.row, styles.tableHeader]}>
@@ -68,8 +111,26 @@ export default function ChecklistScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { padding: 20, backgroundColor: '#28a745', paddingTop: 50 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  // 헤더 스타일 수정: 양 끝 배치를 위해 flexDirection: 'row' 추가
+  header: { 
+    padding: 20, 
+    backgroundColor: '#28a745', 
+    paddingTop: 50, 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center' 
+  },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  // 리셋 버튼 스타일
+  resetButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // 반투명 흰색 배경
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#fff'
+  },
+  resetButtonText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
   memberContainer: { borderBottomWidth: 2, borderBottomColor: '#dee2e6' },
   infoRow: { flexDirection: 'row' },
   toggleRow: { flexDirection: 'row' },
