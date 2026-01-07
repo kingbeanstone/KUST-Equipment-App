@@ -7,16 +7,23 @@ export default function SearchScreen() {
   // 현재 어떤 장비로 정렬 중인지 저장 (가방, BCD, 호흡기 중 하나)
   const [sortKey, setSortKey] = useState<string | null>(null);
 
-  // 정렬 로직: 데이터가 바뀌거나 sortKey가 바뀔 때만 계산 (useMemo 사용)
+  // 정렬 로직: 데이터가 바뀌거나 sortKey가 바뀔 때만 계산
   const sortedData = useMemo(() => {
+    // 1. sortKey가 없으면 기본 정렬 (order 기준 오름차순)
     if (!sortKey) return [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
+    // 2. 복사본을 만들어 오름차순 정렬 수행
     return [...data].sort((a, b) => {
-      const valA = (a[sortKey as keyof MemberEquipment] as any).value || "";
-      const valB = (b[sortKey as keyof MemberEquipment] as any).value || "";
-      
-      // 한글/영문 오름차순 정렬
-      return valA.localeCompare(valB, 'ko', { sensitivity: 'base' });
+      const itemA = a[sortKey as keyof MemberEquipment];
+      const itemB = b[sortKey as keyof MemberEquipment];
+
+      // value 추출 및 문자열 변환 (빈 값은 빈 문자열로 처리)
+      const valA = (itemA && typeof itemA === 'object' && 'value' in itemA) ? String(itemA.value || "") : "";
+      const valB = (itemB && typeof itemB === 'object' && 'value' in itemB) ? String(itemB.value || "") : "";
+
+      // 오름차순 정렬: valA와 valB를 비교 (가 -> 하, A -> Z)
+      // numeric: true 옵션은 숫자 포함 문자열을 '1, 2, 10' 순으로 올바르게 정렬해줍니다.
+      return valA.localeCompare(valB, 'ko', { sensitivity: 'base', numeric: true });
     });
   }, [data, sortKey]);
 
