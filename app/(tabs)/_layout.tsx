@@ -48,6 +48,7 @@ export default function TabLayout() {
         tabBarStyle: { height: 65 }, }}>
         <Tabs.Screen name="index" options={{ title: '정보 입력', headerShown: false }} />
         <Tabs.Screen name="checklist" options={{ title: '체크리스트', headerShown: false }} />
+        <Tabs.Screen name="search" options={{ title: '장비 검색', headerShown: false }} />
       </Tabs>
     </EquipmentContext.Provider>
   );

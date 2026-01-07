@@ -118,6 +118,7 @@ export default function ChecklistScreen() {
 
       <ScrollView horizontal>
         <View>
+          
           {/* 테이블 헤더 (장비명 라벨) */}
           <View style={[styles.row, styles.tableHeader]}>
             <Text style={[styles.headerText, styles.nameCell]}>이름/구분</Text>
